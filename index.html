@@ -168,7 +168,7 @@ function sorted(list){ return [...list].sort((a,b)=>(a.start||"99").localeCompar
 function uid(){ return Math.random().toString(36).slice(2,10); }
 
 const SB_URL="https://dkxalrlzbazdnigfhfqh.supabase.co", SB_KEY="sb_publishable_IEvA1Co9TmSqFnVT9aTUmg_l1jYNhun";
-(function(){ const m=location.hash.match(/k=([^&]+)/); if(m){ localStorage.setItem("blanat_k",decodeURIComponent(m[1])); history.replaceState(null,"",location.pathname); } })();
+(function(){ const m=location.hash.match(/k=([^&]+)/); if(m){ localStorage.setItem("blanat_k",decodeURIComponent(m[1])); } })();
 function bk(){ let k=localStorage.getItem("blanat_k"); if(!k){ k=prompt("Code dyal Blanat:"); if(k) localStorage.setItem("blanat_k",k.trim()); } return localStorage.getItem("blanat_k"); }
 async function rpc(fn,args){
   const r=await fetch(SB_URL+"/rest/v1/rpc/"+fn,{method:"POST",headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(args)});
