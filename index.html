@@ -32,6 +32,7 @@
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
   .card h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--mute);margin:0 0 12px}
   .today-list .task{margin-bottom:6px}
+  .quote{font-size:15px;font-style:italic;color:var(--contenu);margin:-4px 0 14px;line-height:1.35}
   .empty{color:var(--mute);font-style:italic}
   .bal{display:grid;gap:10px}
   .bal .row{display:grid;grid-template-columns:130px 1fr 56px;align-items:center;gap:10px}
@@ -100,6 +101,7 @@
   <div class="top">
     <div class="card">
       <h2 id="todayTitle">Lyoum</h2>
+      <div class="quote" id="quote"></div>
       <div class="today-list" id="today"></div>
     </div>
     <div class="card">
@@ -151,6 +153,8 @@ const CATS = {
   sport:    {label:"🏃 Sport",            color:"var(--sport)"},
   reading:  {label:"📖 Reading",          color:"var(--reading)"},
 };
+const QUOTES = ["Finish today's list. Tomorrow will thank you.", "Small tasks done daily build the life you want.", "Don't wait for motivation. Start, and it will follow.", "Discipline is choosing what you want most over what you want now.", "One task at a time. Every box you check is a win.", "You don't need more time. You need to start.", "Today is the only day you can actually work on.", "Done is better than perfect. Ship it.", "Your future clients are watching what you do today.", "Consistency beats talent when talent doesn't show up.", "Make today count. Cross off every single task.", "The work you avoid is usually the work that matters most.", "Energy follows action. Move first.", "A planned day is a powerful day. Now execute it.", "Do it now. Later becomes never.", "Every frame, every rep, every page: it all adds up.", "Win the morning, win the day.", "Focus on the next task, not the whole list.", "Hard work in silence. Let the results speak.", "You planned it for a reason. Trust your plan.", "Progress, not perfection.", "Show up today, even if it's not your best day.", "The best time to start was earlier. The next best time is now.", "Your habits today are your results tomorrow.", "Be proud of the person who finished everything today.", "Comfort is the enemy of growth. Go do the hard task first.", "Tiny steps still move you forward.", "Create more than you consume today.", "Stay hungry. Stay focused. Finish the list.", "Nobody is coming to do it for you. That's the good news.", "The goal is 100 clients. Today's tasks are how you get there.", "Great work is just good work done every day.", "Make your future self proud.", "Discipline today, freedom tomorrow.", "Start with the task you want to skip.", "Don't count the days. Make the days count.", "Your only competition is who you were yesterday.", "Action cures doubt.", "A clear plan and a full effort. That's the whole secret.", "Big dreams, daily tasks.", "Do what you said you would do. Today.", "Momentum is built one finished task at a time.", "Train your body, feed your mind, build your brand.", "Excuses don't edit videos. You do.", "Keep going. The version of you that finishes is already proud.", "Focus is a superpower. Use it today.", "Little by little, a little becomes a lot.", "Work like the reel is already going viral.", "Every expert was once a beginner who didn't quit.", "Today's effort is tomorrow's portfolio.", "Be stubborn about your goals, flexible about your methods.", "Check the boxes. Collect the wins.", "Don't break the chain. Finish today too.", "The plan is ready. Now it's your turn.", "Rest if you must, but don't quit.", "Make it happen. Shock everyone.", "Your vision needs your action.", "Strong mind, clear plan, full day.", "Do the work. Post the work. Repeat.", "End the day with zero tasks left."];
+function quoteFor(d){ const n=Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5); return QUOTES[n%QUOTES.length]; }
 const DAYS = ["Lithnin","Tlat","Larb3a","Lkhmis","Jjem3a","Ssebt","L7ed"];
 
 let data = {tasks:{}};
@@ -267,6 +271,7 @@ function render(){
 
   // today
   const td = document.getElementById("today"); td.innerHTML="";
+  document.getElementById("quote").textContent = "“"+quoteFor(new Date())+"”";
   const tl = data.tasks[todayIso] || [];
   const now = new Date();
   document.getElementById("todayTitle").textContent = "Lyoum · "+DAYS[(now.getDay()+6)%7]+" "+fmt(now);
