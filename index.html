@@ -32,7 +32,7 @@
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
   .card h2{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--mute);margin:0 0 12px}
   .today-list .task{margin-bottom:6px}
-  .quote{font-size:15px;font-style:italic;color:var(--contenu);margin:-4px 0 14px;line-height:1.35}
+  .banner.quote{font-size:17px;font-weight:600;font-style:italic;color:var(--contenu);justify-content:center;text-align:center;line-height:1.35}
   .empty{color:var(--mute);font-style:italic}
   .bal{display:grid;gap:10px}
   .bal .row{display:grid;grid-template-columns:130px 1fr 56px;align-items:center;gap:10px}
@@ -97,11 +97,11 @@
   <button id="copyPrev" title="Copier les tâches de la semaine précédente">Copier simana li fatt</button>
 </header>
 <main>
+  <div class="banner quote" id="quote"></div>
   <div class="banner" id="banner" hidden></div>
   <div class="top">
     <div class="card">
       <h2 id="todayTitle">Lyoum</h2>
-      <div class="quote" id="quote"></div>
       <div class="today-list" id="today"></div>
     </div>
     <div class="card">
