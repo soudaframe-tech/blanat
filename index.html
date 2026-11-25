@@ -59,6 +59,10 @@
   .task input{margin:2px 0 0;accent-color:var(--c);cursor:pointer}
   .task .t{font-size:12px;font-weight:700;color:var(--c);font-variant-numeric:tabular-nums}
   .task .ti{font-size:13px;word-break:break-word}
+  .task .tag{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:#3a2a12;color:var(--contenu);margin-bottom:2px}
+  .addToday{margin-top:8px;width:100%}
+  .chk{display:flex;gap:8px;align-items:center;margin:10px 0 4px;font-size:13px;cursor:pointer}
+  .chk input{width:auto;margin:0;accent-color:var(--contenu)}
   .task.done .ti{text-decoration:line-through;color:var(--mute)}
   .legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--mute);font-size:12px}
   .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
@@ -105,6 +109,7 @@
     <div class="card">
       <h2 id="todayTitle">Lyoum</h2>
       <div class="today-list" id="today"></div>
+      <button class="add addToday" id="addToday">+ Today task</button>
     </div>
     <div class="card">
       <h2>Balance dyal simana (heures)</h2>
@@ -124,7 +129,8 @@
     <div class="cats" id="catPick"></div>
     <label>Chno ghadi tdir</label>
     <input type="text" id="fTitle" placeholder="ex: tournage reel, chapitre 3, gym…" required>
-    <div class="two">
+    <label class="chk"><input type="checkbox" id="fToday"> ⚡ Today task: bla wa9t, ghir f had nhar (ma katcopiach l simana jaya)</label>
+    <div class="two" id="timeRow">
       <div><label>Mn</label><input type="time" id="fStart"></div>
       <div><label>7tal</label><input type="time" id="fEnd"></div>
     </div>
@@ -196,7 +202,7 @@ function taskEl(t, date){
   cb.onclick = e => { e.stopPropagation(); t.done = cb.checked; save(); render(); };
   const body = document.createElement("div");
   const time = t.start ? `${t.start}${t.end?"–"+t.end:""}` : "";
-  body.innerHTML = (time?`<div class="t">${time}</div>`:"") + `<div class="ti"></div>`;
+  body.innerHTML = (t.today?`<div class="tag">⚡ today</div>`:"") + (time?`<div class="t">${time}</div>`:"") + `<div class="ti"></div>`;
   body.querySelector(".ti").textContent = c.label.split(" ")[0] + " " + t.title;
   el.append(cb, body);
   el.onclick = () => openDlg(date, t);
@@ -304,6 +310,8 @@ function openDlg(date, t){
   document.getElementById("fTitle").value = t?t.title:"";
   document.getElementById("fStart").value = t?t.start||"":"";
   document.getElementById("fEnd").value = t?t.end||"":"";
+  const ft=document.getElementById("fToday"); ft.checked = t ? !!t.today : !!todayMode; todayMode=false;
+  document.getElementById("timeRow").hidden = ft.checked;
   document.getElementById("delBtn").hidden = !t;
   document.getElementById("copyBox").hidden = !t;
   if(t){
@@ -334,7 +342,8 @@ document.getElementById("dlg").addEventListener("close", async e=>{
   const list = data.tasks[editing.date] = data.tasks[editing.date] || [];
   if(v==="save"){
     const title=document.getElementById("fTitle").value.trim(); if(!title) return;
-    const rec={title, cat:pickedCat, start:document.getElementById("fStart").value, end:document.getElementById("fEnd").value};
+    const td=document.getElementById("fToday").checked;
+    const rec={title, cat:pickedCat, today:td, start:td?"":document.getElementById("fStart").value, end:td?"":document.getElementById("fEnd").value};
     if(editing.id){ Object.assign(list.find(x=>x.id===editing.id), rec); }
     else list.push({id:uid(), done:false, ...rec});
   } else if((v==="copy"||v==="move") && editing.id){
@@ -348,6 +357,9 @@ document.getElementById("dlg").addEventListener("close", async e=>{
   editing=null; await save(); render();
 });
 
+let todayMode=false;
+document.getElementById("fToday").onchange=e=>{ document.getElementById("timeRow").hidden=e.target.checked; };
+document.getElementById("addToday").onclick=()=>{ todayMode=true; openDlg(iso(new Date()),null); };
 document.getElementById("prev").onclick=()=>{weekStart=addDays(weekStart,-7);render();};
 document.getElementById("next").onclick=()=>{weekStart=addDays(weekStart,7);render();};
 document.getElementById("thisWeek").onclick=()=>{weekStart=monday(new Date());render();};
@@ -355,7 +367,7 @@ document.getElementById("copyPrev").onclick=async()=>{
   let has=0; for(let i=0;i<7;i++) has+=(data.tasks[iso(addDays(weekStart,i))]||[]).length;
   if(has && !confirm("Had simana fiha deja tâches. Nzid 3liha tâches dyal simana li fatt?")) return;
   for(let i=0;i<7;i++){
-    const src=data.tasks[iso(addDays(weekStart,i-7))]||[]; if(!src.length) continue;
+    const src=(data.tasks[iso(addDays(weekStart,i-7))]||[]).filter(t=>!t.today); if(!src.length) continue;
     const k=iso(addDays(weekStart,i)); data.tasks[k]=(data.tasks[k]||[]).concat(src.map(t=>({...t,id:uid(),done:false})));
   }
   await save(); render();
