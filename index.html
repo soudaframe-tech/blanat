@@ -129,10 +129,10 @@
     <div class="cats" id="catPick"></div>
     <label>Chno ghadi tdir</label>
     <input type="text" id="fTitle" placeholder="ex: tournage reel, chapitre 3, gym…" required>
-    <label class="chk"><input type="checkbox" id="fToday"> ⚡ Today task: bla wa9t, ghir f had nhar (ma katcopiach l simana jaya)</label>
+    <label class="chk"><input type="checkbox" id="fToday"> ⚡ Today task: ghir f had nhar (ma katcopiach l simana jaya)</label>
     <div class="two" id="timeRow">
-      <div><label>Mn</label><input type="time" id="fStart"></div>
-      <div><label>7tal</label><input type="time" id="fEnd"></div>
+      <div><label>Mn (ikhtiyari)</label><input type="time" id="fStart"></div>
+      <div><label>7tal (ikhtiyari)</label><input type="time" id="fEnd"></div>
     </div>
     <div id="copyBox">
       <label>Copier had tâche l</label>
@@ -178,7 +178,7 @@ function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; 
 function fmt(d){ return d.toLocaleDateString("fr-FR",{day:"numeric",month:"short"}); }
 function mins(t){ if(!t) return null; const [h,m]=t.split(":").map(Number); return h*60+m; }
 function hours(t){ const a=mins(t.start), b=mins(t.end); return (a!=null&&b!=null&&b>a)?(b-a)/60:0; }
-function sorted(list){ return [...list].sort((a,b)=>(a.start||"99").localeCompare(b.start||"99")); }
+function sorted(list){ return [...list].sort((a,b)=>(a.start||a.end||"99").localeCompare(b.start||b.end||"99")); }
 function uid(){ return Math.random().toString(36).slice(2,10); }
 
 const SB_URL="https://dkxalrlzbazdnigfhfqh.supabase.co", SB_KEY="sb_publishable_IEvA1Co9TmSqFnVT9aTUmg_l1jYNhun";
@@ -202,7 +202,7 @@ function taskEl(t, date){
   const cb = document.createElement("input"); cb.type="checkbox"; cb.checked=!!t.done;
   cb.onclick = e => { e.stopPropagation(); t.done = cb.checked; save(); render(); };
   const body = document.createElement("div");
-  const time = t.start ? `${t.start}${t.end?"–"+t.end:""}` : "";
+  const time = t.start ? `${t.start}${t.end?"–"+t.end:""}` : (t.end ? `→ ${t.end}` : "");
   body.innerHTML = (t.today?`<div class="tag">⚡ today</div>`:"") + (time?`<div class="t">${time}</div>`:"") + `<div class="ti"></div>`;
   body.querySelector(".ti").textContent = c.label.split(" ")[0] + " " + t.title;
   el.append(cb, body);
@@ -312,7 +312,6 @@ function openDlg(date, t){
   document.getElementById("fStart").value = t?t.start||"":"";
   document.getElementById("fEnd").value = t?t.end||"":"";
   const ft=document.getElementById("fToday"); ft.checked = t ? !!t.today : !!todayMode; todayMode=false;
-  document.getElementById("timeRow").hidden = ft.checked;
   document.getElementById("delBtn").hidden = !t;
   document.getElementById("copyBox").hidden = !t;
   if(t){
@@ -344,7 +343,7 @@ document.getElementById("dlg").addEventListener("close", async e=>{
   if(v==="save"){
     const title=document.getElementById("fTitle").value.trim(); if(!title) return;
     const td=document.getElementById("fToday").checked;
-    const rec={title, cat:pickedCat, today:td, start:td?"":document.getElementById("fStart").value, end:td?"":document.getElementById("fEnd").value};
+    const rec={title, cat:pickedCat, today:td, start:document.getElementById("fStart").value, end:document.getElementById("fEnd").value};
     if(editing.id){ Object.assign(list.find(x=>x.id===editing.id), rec); }
     else list.push({id:uid(), done:false, ...rec});
   } else if((v==="copy"||v==="move") && editing.id){
@@ -359,7 +358,6 @@ document.getElementById("dlg").addEventListener("close", async e=>{
 });
 
 let todayMode=false;
-document.getElementById("fToday").onchange=e=>{ document.getElementById("timeRow").hidden=e.target.checked; };
 document.getElementById("addToday").onclick=()=>{ todayMode=true; openDlg(iso(new Date()),null); };
 document.getElementById("prev").onclick=()=>{weekStart=addDays(weekStart,-7);render();};
 document.getElementById("next").onclick=()=>{weekStart=addDays(weekStart,7);render();};
