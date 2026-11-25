@@ -56,7 +56,14 @@
   .add{margin-top:auto;background:none;border:1px dashed var(--line);color:var(--mute)}
   .task{display:flex;gap:8px;align-items:flex-start;padding:7px 8px;border-radius:8px;background:#1d1d21;border-left:3px solid var(--c);cursor:pointer}
   .task:hover{background:#232328}
-  .task input{margin:2px 0 0;accent-color:var(--c);cursor:pointer}
+  .task input{margin:0;width:22px;height:22px;flex:0 0 22px;accent-color:var(--c);cursor:pointer}
+  .task{align-items:center}
+  .task.leaving{animation:leave .38s ease forwards;overflow:hidden}
+  @keyframes leave{0%{opacity:1;transform:none}60%{opacity:0;transform:translateX(40px) scale(.96)}100%{opacity:0;transform:translateX(40px);max-height:0;padding-top:0;padding-bottom:0;margin:0}}
+  .task.arriving{animation:arrive .5s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes arrive{0%{opacity:0;transform:translateY(-14px) scale(.9)}100%{opacity:1;transform:none}}
+  .dart{margin-top:14px;border-top:1px dashed #333;padding-top:10px}
+  .dart h3{margin:0 0 8px;font-size:13px;color:var(--sport);letter-spacing:.3px}
   .task .t{font-size:12px;font-weight:700;color:var(--c);font-variant-numeric:tabular-nums}
   .task .ti{font-size:13px;word-break:break-word}
   .task .tag{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:#3a2a12;color:var(--contenu);margin-bottom:2px}
@@ -110,6 +117,7 @@
     <div class="card">
       <h2 id="todayTitle">Lyoum</h2>
       <div class="today-list" id="today"></div>
+      <div class="dart" id="dartBox" hidden><h3 id="dartTitle">✅ Dart</h3><div class="today-list" id="dart"></div></div>
       <button class="add addToday" id="addToday">+ Today task</button>
     </div>
     <div class="card">
@@ -169,6 +177,7 @@ function quoteFor(d){ return QUOTES[quoteIdx(d)]; }
 const DAYS = ["Lithnin","Tlat","Larb3a","Lkhmis","Jjem3a","Ssebt","L7ed"];
 
 let data = {tasks:{}};
+let lastDone = null;
 let weekStart = monday(new Date());
 let editing = null; // {date, id} or {date, id:null}
 let pickedCat = "work";
@@ -221,10 +230,15 @@ document.addEventListener("visibilitychange",async()=>{ if(document.visibilitySt
 function taskEl(t, date){
   const c = CATS[t.cat] || CATS.work;
   const el = document.createElement("div");
-  el.className = "task"+(t.done?" done":"");
+  el.className = "task"+(t.done?" done":"")+(t.id===lastDone&&t.done?" arriving":"");
   el.style.setProperty("--c", c.color);
   const cb = document.createElement("input"); cb.type="checkbox"; cb.checked=!!t.done;
-  cb.onclick = e => { e.stopPropagation(); t.done = cb.checked; save(); render(); };
+  cb.onclick = e => {
+    e.stopPropagation(); t.done = cb.checked;
+    if(t.done) lastDone = t.id;
+    el.classList.add("leaving");
+    setTimeout(()=>{ render(); save(); }, 380);
+  };
   const body = document.createElement("div");
   const time = t.start ? `${t.start}${t.end?"–"+t.end:""}` : (t.end ? `→ ${t.end}` : "");
   body.innerHTML = (t.today?`<div class="tag">⚡ today</div>`:"") + (time?`<div class="t">${time}</div>`:"") + `<div class="ti"></div>`;
@@ -286,7 +300,7 @@ function render(){
     const col = document.createElement("div");
     col.className = "day"+(di===todayIso?" is-today":"");
     col.innerHTML = `<div class="dh"><span class="dn">${DAYS[i]}</span><span class="dd">${fmt(d)}</span></div>`;
-    sorted(list).forEach(t=>col.append(taskEl(t,di)));
+    [...sorted(list.filter(t=>!t.done)), ...sorted(list.filter(t=>t.done))].forEach(t=>col.append(taskEl(t,di)));
     const add = document.createElement("button"); add.className="add"; add.textContent="+ zid";
     add.onclick=()=>openDlg(di,null);
     col.append(add);
@@ -314,8 +328,15 @@ function render(){
   const tl = data.tasks[todayIso] || [];
   const now = new Date();
   document.getElementById("todayTitle").textContent = "Lyoum · "+DAYS[(now.getDay()+6)%7]+" "+fmt(now);
+  const todo = tl.filter(t=>!t.done), dn = tl.filter(t=>t.done);
   if(!tl.length){ td.innerHTML=`<div class="empty">Walo mplaniyi lyoum.</div>`; }
-  sorted(tl).forEach(t=>td.append(taskEl(t,todayIso)));
+  else if(!todo.length){ td.innerHTML=`<div class="empty">🎉 Kolchi sali lyoum!</div>`; }
+  sorted(todo).forEach(t=>td.append(taskEl(t,todayIso)));
+  const dz=document.getElementById("dart"); dz.innerHTML="";
+  document.getElementById("dartBox").hidden = !dn.length;
+  document.getElementById("dartTitle").textContent = `✅ Dart (${dn.length}/${tl.length})`;
+  sorted(dn).forEach(t=>dz.append(taskEl(t,todayIso)));
+  lastDone = null;
 
   // sunday banner
   const bn = document.getElementById("banner");
