@@ -105,6 +105,7 @@
 <main>
   <div class="banner quote" id="quote"></div>
   <div class="banner" id="banner" hidden></div>
+  <div class="banner" id="offline" hidden><span>📴 Bla internet: kolchi kaytsjjel f telephone w ghadi ytsynchroniza mnin yrje3 l'internet.</span></div>
   <div class="top">
     <div class="card">
       <h2 id="todayTitle">Lyoum</h2>
@@ -189,8 +190,31 @@ async function rpc(fn,args){
   if(!r.ok){ const t=await r.text(); if(t.includes("denied")){ localStorage.removeItem("blanat_k"); alert("Code ghalat."); } throw new Error(t); }
   const t=await r.text(); return t?JSON.parse(t):null;
 }
-async function load(){ data=await rpc("blanat_get",{k:bk()})||{tasks:{}}; if(!data.tasks) data.tasks={}; }
-async function save(){ await rpc("blanat_set",{k:bk(),d:data}); }
+// Offline: the planning is kept on the device; edits made without network are sent when it comes back.
+function keepLocal(){ try{ localStorage.setItem("blanat_data",JSON.stringify(data)); }catch(_){} }
+function toApp(){ try{ window.webkit.messageHandlers.blanat.postMessage(JSON.stringify(data)); }catch(_){} }
+function setOffline(off){ const b=document.getElementById("offline"); if(b) b.hidden=!off; }
+async function load(){
+  try{
+    const loc=localStorage.getItem("blanat_pending")&&JSON.parse(localStorage.getItem("blanat_data")||"null");
+    if(loc&&loc.tasks){ data=loc; await rpc("blanat_set",{k:bk(),d:data}); localStorage.removeItem("blanat_pending"); }
+    else { data=await rpc("blanat_get",{k:bk()})||{tasks:{}}; }
+    setOffline(false);
+  }catch(e){
+    try{ data=JSON.parse(localStorage.getItem("blanat_data")); }catch(_){}
+    setOffline(true);
+  }
+  if(!data||typeof data!=="object") data={tasks:{}};
+  if(!data.tasks) data.tasks={};
+  keepLocal();
+}
+async function save(){
+  keepLocal(); localStorage.setItem("blanat_pending","1");
+  try{ await rpc("blanat_set",{k:bk(),d:data}); localStorage.removeItem("blanat_pending"); setOffline(false); }
+  catch(e){ setOffline(true); }
+  toApp();
+}
+window.addEventListener("online",async()=>{ if(localStorage.getItem("blanat_pending")){ await load(); render(); } });
 document.addEventListener("visibilitychange",async()=>{ if(document.visibilityState==="visible" && !document.querySelector("dialog[open]")){ await load(); render(); } });
 
 
